@@ -59,7 +59,7 @@ VALUES
 (10, 3, 3, 805.00, '2025-04-27', 7, 4);
 
 
--- Module 2 - Create a virtual table to summarize data - Task 1
+-- Module 2 - Adding sales reports - Create a virtual table to summarize data - Task 1
 CREATE VIEW OrdersView AS
 SELECT OrderID, Quantity, TotalCost
 FROM Orders
@@ -67,14 +67,14 @@ WHERE Quantity > 2;
 
 SELECT * FROM OrdersView;
 
--- Module 2 - Create a virtual table to summarize data - Task 2
+-- Module 2 - Adding sales reports - Create a virtual table to summarize data - Task 2
 SELECT cm.CustomerID, cm.FullName, od.OrderID, od.TotalCost, mn.MenuName, mn.CourseName
 FROM Customers cm INNER JOIN Orders od ON cm.CustomerID = od.CustomerID
 					INNER JOIN Menus mn ON od.MenuID = mn.MenuID
 WHERE od.TotalCost > 150
 ORDER BY od.TotalCost ASC;
 
--- Module 2 - Create a virtual table to summarize data - Task 3:
+-- Module 2 - Adding sales reports - Create a virtual table to summarize data - Task 3:
 SELECT MenuName
 FROM Menus
 WHERE MenuID = ANY
@@ -83,7 +83,7 @@ WHERE MenuID = ANY
   WHERE Quantity > 2);
   
   
--- Module 2 - Create optimized queries to manage and analyze data - Task 1:
+-- Module 2 - Adding sales reports - Create optimized queries to manage and analyze data - Task 1:
 DELIMITER //
 
 CREATE PROCEDURE GetMaxQuantity()
@@ -96,14 +96,14 @@ DELIMITER ;
 CALL GetMaxQuantity();
 
 
--- Module 2 - Create optimized queries to manage and analyze data - Task 2:
+-- Module 2 - Adding sales reports - Create optimized queries to manage and analyze data - Task 2:
 PREPARE GetOrderDetail FROM 'SELECT OrderID, Quantity, TotalCost FROM Orders WHERE OrderID = ?';
 
 SET @id=4;
 EXECUTE GetOrderDetail USING @id;
 
 
--- Module 2 - Create optimized queries to manage and analyze data - Task 3:
+-- Module 2 - Adding sales reports - Create optimized queries to manage and analyze data - Task 3:
 DELIMITER //
 
 CREATE PROCEDURE CancelOrder(
@@ -120,3 +120,137 @@ DELIMITER ;
 
 CALL CancelOrder(5);
 
+
+-- Module 2 - Table booking system - Create SQL queries to check available bookings based on user input - Task 1:
+INSERT INTO Bookings (BookingID, TableNumber, BookingDate, CustomerID)
+VALUES
+(7, 5, '2025-04-28', 1),
+(8, 3, '2025-04-28', 3),
+(9, 2, '2025-04-29', 2),
+(10, 2, '2025-04-28', 1),
+(11, 5, '2025-04-28', 2),
+(12, 8, '2025-04-29', 5);
+
+-- Module 2 - Table booking system - Create SQL queries to check available bookings based on user input - Task 2:
+DELIMITER //
+
+CREATE PROCEDURE CheckBooking(
+	IN CheckDate DATE,
+    IN CheckTable INT
+)
+BEGIN
+	DECLARE NoBooking INT DEFAULT 0;
+    
+    SELECT COUNT(BookingID) INTO NoBooking
+    FROM Bookings
+    WHERE BookingDate = CheckDate AND TableNumber = CheckTable;
+    
+    SELECT CONCAT('Table ', CAST(CheckTable AS CHAR), ' is ',
+    CASE
+		WHEN NoBooking > 0 THEN 'already booked'
+        ELSE 'available'
+    END
+    ) AS 'Booking status';
+END //
+
+DELIMITER ;
+
+CALL CheckBooking('2025-04-28', 6);
+
+
+-- Module 2 - Table booking system - Create SQL queries to check available bookings based on user input - Task 3:
+DELIMITER //
+
+CREATE PROCEDURE AddValidBooking(
+	IN CheckDate DATE,
+    IN CheckTable INT
+)
+BEGIN
+	DECLARE NoBooking INT DEFAULT 0;
+    
+    START TRANSACTION;
+       
+    SELECT COUNT(BookingID) INTO NoBooking
+    FROM Bookings
+    WHERE BookingDate = CheckDate AND TableNumber = CheckTable;
+    
+    IF NoBooking = 0 THEN
+		BEGIN
+			INSERT INTO Bookings (BookingID, TableNumber, BookingDate, CustomerID) VALUES (13, CheckTable, CheckDate, 1);
+			COMMIT;
+            SELECT CONCAT('Table ', CAST(CheckTable AS CHAR), ' is successfully booked') AS 'Booking status';
+		END;
+    ELSE
+		BEGIN
+			SELECT CONCAT('Table ', CAST(CheckTable AS CHAR), ' is already booked - booking cancelled') AS 'Booking status';
+		END;
+	END IF;
+    
+    ROLLBACK;
+    
+END //
+
+DELIMITER ;
+
+CALL AddValidBooking('2025-04-28', 6);
+
+SELECT * FROM Bookings;
+
+-- Module 2 - Table booking system - Create SQL queries to add and update bookings - Task 1:
+DELIMITER //
+
+CREATE PROCEDURE AddBooking(
+	IN AddID INT,
+    IN AddTable INT,
+    IN AddDate DATE,
+    IN AddCustomerID INT
+)
+BEGIN
+	INSERT INTO Bookings (BookingID, TableNumber, BookingDate, CustomerID) VALUES (AddID, AddTable, AddDate, AddCustomerID);
+	SELECT CONCAT('New booking added') AS 'Confirmation';
+	    
+END //
+
+DELIMITER ;
+
+CALL AddBooking(14, 4,'2025-04-28', 3);
+
+
+-- Module 2 - Table booking system - Create SQL queries to add and update bookings - Task 2:
+DELIMITER //
+
+CREATE PROCEDURE UpdateBooking(
+	IN UpdateID INT,
+    IN UpdateDate DATE
+)
+BEGIN
+	UPDATE Bookings
+    SET BookingDate = UpdateDate
+    WHERE BookingID = UpdateID;
+	SELECT CONCAT('Booking ',CAST(UpdateID AS CHAR) ,' updated') AS 'Confirmation';
+	    
+END //
+
+DELIMITER ;
+
+CALL UpdateBooking(11, '2025-04-25');
+
+
+-- Module 2 - Table booking system - Create SQL queries to add and update bookings - Task 3:
+DELIMITER //
+
+CREATE PROCEDURE CancelBooking(
+	IN DeleteID INT
+)
+BEGIN
+	DELETE FROM Bookings
+    WHERE BookingID = DeleteID;
+	SELECT CONCAT('Booking ',CAST(DeleteID AS CHAR) ,' cancelled') AS 'Confirmation';
+	    
+END //
+
+DELIMITER ;
+
+CALL CancelBooking(14);
+
+SELECT * FROM Bookings;
