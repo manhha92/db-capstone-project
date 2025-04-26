@@ -1,5 +1,71 @@
 USE little_lemon_db;
 
+-- Create tables:
+CREATE TABLE `Bookings` (
+  `BookingID` int NOT NULL,
+  `TableNumber` int NOT NULL,
+  `BookingDate` date NOT NULL,
+  `CustomerID` int NOT NULL,
+  PRIMARY KEY (`BookingID`),
+  KEY `booking_customer_fk_idx` (`CustomerID`),
+  CONSTRAINT `booking_customer_fk` FOREIGN KEY (`CustomerID`) REFERENCES `Customers` (`CustomerID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `Customers` (
+  `CustomerID` int NOT NULL,
+  `FullName` varchar(100) NOT NULL,
+  `Email` varchar(100) NOT NULL,
+  PRIMARY KEY (`CustomerID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `Delivery` (
+  `DeliveryID` int NOT NULL,
+  `DeliveryDate` date DEFAULT NULL,
+  `DeliveryStatus` varchar(45) DEFAULT NULL,
+  `OrderID` int NOT NULL,
+  PRIMARY KEY (`DeliveryID`),
+  KEY `delivery_order_fk_idx` (`OrderID`),
+  CONSTRAINT `delivery_order_fk` FOREIGN KEY (`OrderID`) REFERENCES `Orders` (`OrderID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `Menus` (
+  `MenuID` int NOT NULL,
+  `MenuName` varchar(45) DEFAULT NULL,
+  `Cuisine` varchar(45) DEFAULT NULL,
+  `StarterName` varchar(45) DEFAULT NULL,
+  `CourseName` varchar(45) DEFAULT NULL,
+  `DrinkName` varchar(45) DEFAULT NULL,
+  `DesertName` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`MenuID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `Orders` (
+  `OrderID` int NOT NULL,
+  `MenuID` int NOT NULL,
+  `CustomerID` int NOT NULL,
+  `TotalCost` decimal(10,2) NOT NULL,
+  `OrderDate` date NOT NULL,
+  `Quantity` int NOT NULL,
+  `StaffID` int NOT NULL,
+  PRIMARY KEY (`OrderID`),
+  KEY `order_menu_fk_idx` (`MenuID`),
+  KEY `order_customer_fk_idx` (`CustomerID`),
+  KEY `order_staff_fk_idx` (`StaffID`),
+  CONSTRAINT `order_customer_fk` FOREIGN KEY (`CustomerID`) REFERENCES `Customers` (`CustomerID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `order_menu_fk` FOREIGN KEY (`MenuID`) REFERENCES `Menus` (`MenuID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `order_staff_fk` FOREIGN KEY (`StaffID`) REFERENCES `Staffs` (`StaffID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `Staffs` (
+  `StaffID` int NOT NULL,
+  `StaffRole` varchar(45) NOT NULL,
+  `StaffSalary` int NOT NULL,
+  PRIMARY KEY (`StaffID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+-- Add data to tables
+
 INSERT INTO Staffs (StaffID, StaffRole, StaffSalary)
 VALUES
 (1, 'Manager', 70000),
